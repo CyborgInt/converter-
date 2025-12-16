@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  converter:
+    build: .
+    image: csvjsonyaml-converter:latest
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    env_file:
+      - .env
+    restart: unless-stopped

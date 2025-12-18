@@ -1,25 +1,22 @@
-"""
-FastAPI HTTP API для конвертации.
-Endpoints:
-  POST /convert - multipart/form-data: file (or text), src_format, dst_format, delimiter (optional), pretty (optional)
-  GET / - простая запись о сервисе
-"""
-
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.responses import PlainTextResponse
-import uvicorn
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from typing import Optional
+import uvicorn
 from svc import core
-import logging
 
-logger = logging.getLogger("svc.api")
-app = FastAPI(title="CSV<->JSON<->YAML Converter", version="1.0")
+app = FastAPI()
 
+app.mount("/web", StaticFiles(directory="web"), name="web")
 
-@app.get("/", response_class=PlainTextResponse)
+@app.get("/")
 def root():
-    return "CSV <-> JSON <-> YAML converter. Use POST /convert"
+    return RedirectResponse(url="/ui")
 
+@app.get("/ui", response_class=HTMLResponse)
+def ui():
+    with open("web/index.html", encoding="utf-8") as f:
+        return f.read()
 
 @app.post("/convert", response_class=PlainTextResponse)
 async def convert(
@@ -27,49 +24,39 @@ async def convert(
     dst_format: str = Form(...),
     file: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
-    delimiter: Optional[str] = Form(","),
     pretty: Optional[bool] = Form(True),
 ):
-    src_format = src_format.lower()
-    dst_format = dst_format.lower()
-    if file is None and (text is None or text == ""):
-        raise HTTPException(status_code=400, detail="Provide file upload or text form field.")
+    final_delimiter = ","
+
     if file:
         content = (await file.read()).decode("utf-8")
-    else:
+    elif text:
         content = text
+    else:
+        raise HTTPException(status_code=400, detail="No data")
+
     try:
-        # reuse CLI conversion logic
-        if src_format == dst_format:
-            result = content
-        else:
-            # delegate to core via same conversion mapping
-            if src_format == "csv" and dst_format == "json":
-                data = core.csv_to_json(content, delimiter=delimiter)
-                result = core.write_json(data, pretty=pretty)
-            elif src_format == "csv" and dst_format == "yaml":
-                result = core.csv_to_yaml(content, delimiter=delimiter)
-            elif src_format == "json" and dst_format == "csv":
-                result = core.json_to_csv(content, delimiter=delimiter)
-            elif src_format == "json" and dst_format == "yaml":
-                result = core.json_to_yaml(content)
-            elif src_format == "yaml" and dst_format == "json":
-                data = core.yaml_to_json(content)
-                result = core.write_json(data, pretty=pretty)
-            elif src_format == "yaml" and dst_format == "csv":
-                result = core.yaml_to_csv(content, delimiter=delimiter)
-            else:
-                raise HTTPException(status_code=400, detail=f"Unsupported conversion: {src_format}->{dst_format}")
+        src, dst = src_format.lower(), dst_format.lower()
+        if src == dst:
+            return content
+
+        if src == "csv" and dst == "json":
+            data = core.csv_to_json(content, delimiter=final_delimiter)
+            return core.write_json(data, pretty=pretty)
+        elif src == "csv" and dst == "yaml":
+            return core.csv_to_yaml(content, delimiter=final_delimiter)
+        elif src == "json" and dst == "csv":
+            return core.json_to_csv(content, delimiter=final_delimiter)
+        elif src == "json" and dst == "yaml":
+            return core.json_to_yaml(content)
+        elif src == "yaml" and dst == "json":
+            return core.write_json(core.yaml_to_json(content), pretty=pretty)
+        elif src == "yaml" and dst == "csv":
+            return core.yaml_to_csv(content, delimiter=final_delimiter)
+
+        raise ValueError("Invalid format")
     except Exception as e:
-        logger.exception("Conversion error")
         raise HTTPException(status_code=400, detail=str(e))
-    return PlainTextResponse(content=result, media_type="text/plain; charset=utf-8")
-
-
-def run_from_cli():
-    """Запускает uvicorn (используется при python -m svc --serve)"""
-    uvicorn.run("svc.api:app", host="0.0.0.0", port=8000, reload=False)
-
 
 if __name__ == "__main__":
-    run_from_cli()
+    uvicorn.run(app, host="0.0.0.0", port=8000)

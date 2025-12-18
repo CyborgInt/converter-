@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Конвертер CSV ↔ JSON ↔ YAML</title>
+  <link rel="stylesheet" href="/web/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+</head>
+<body>
+  <div class="main-wrapper">
+    <div class="container">
+      <div class="header">
+        <h1>Конвертер CSV ↔ JSON ↔ YAML</h1>
+        <button class="icon-btn theme-toggle" id="themeToggle" title="Сменить тему">☀️</button>
+      </div>
+
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-content">
+          <span class="drop-icon">📂</span>
+          <p id="dropText">Перетащите файл или <span>выберите</span></p>
+          <p id="fileName" class="file-name"></p>
+        </div>
+        <input type="file" id="fileInput" hidden />
+      </div>
+
+      <div class="editor-box">
+        <div class="editor-header">
+          <label>Исходный код:</label>
+          <span id="validationStatus" class="badge hidden">Valid JSON</span>
+        </div>
+        <div id="inputEditor" class="ace-editor"></div>
+      </div>
+
+      <div class="controls">
+        <div class="select-group">
+          <select id="srcFormat">
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+            <option value="yaml">YAML</option>
+          </select>
+          <span class="arrow">➝</span>
+          <select id="dstFormat">
+            <option value="json">JSON</option>
+            <option value="csv">CSV</option>
+            <option value="yaml">YAML</option>
+          </select>
+        </div>
+
+        <button id="convertBtn" class="primary-btn">
+          <span class="btn-text">Конвертировать</span>
+          <span class="loader hidden"></span>
+        </button>
+      </div>
+
+      <div class="result-box">
+        <div class="result-header">
+          <label>Результат:</label>
+          <button id="copyBtn" class="sm-btn" disabled>Копировать</button>
+        </div>
+        <div id="outputEditor" class="ace-editor"></div>
+      </div>
+
+      <button id="downloadBtn" class="secondary-btn" disabled>Скачать файл</button>
+    </div>
+
+    <div class="history-panel">
+      <h3>История</h3>
+      <div id="historyList" class="history-list">
+        <div class="empty-history">Пусто</div>
+      </div>
+      <button id="clearHistory" class="clear-btn">Очистить</button>
+    </div>
+  </div>
+  <script src="/web/script.js"></script>
+</body>
+</html>

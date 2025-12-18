@@ -8,7 +8,9 @@ RUN python -m pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 COPY svc/ ./svc/
-ENV PYTHONPATH=/app/svc
+COPY web/ ./web/
+
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 

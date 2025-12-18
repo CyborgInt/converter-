@@ -28,12 +28,9 @@ const elements = {
 let resultData = "";
 let resultExt = "";
 
-// Тема
-// Исправленная функция применения темы
 function applyTheme(isLight) {
     const themeName = isLight ? "chrome" : "twilight";
     
-    // Ключевое исправление здесь:
     if (isLight) {
         document.body.setAttribute("data-theme", "light");
     } else {
@@ -42,18 +39,15 @@ function applyTheme(isLight) {
     
     elements.themeToggle.textContent = isLight ? "🌙" : "☀️";
     
-    // Обновляем темы в редакторах Ace
     if (inputEditor && outputEditor) {
         inputEditor.setTheme(`ace/theme/${themeName}`);
         outputEditor.setTheme(`ace/theme/${themeName}`);
     }
 }
 
-// Исправленный клик по кнопке
 elements.themeToggle.onclick = () => {
-    // Проверяем, стоит ли сейчас светлая тема
     const isCurrentlyLight = document.body.getAttribute("data-theme") === "light";
-    const newThemeIsLight = !isCurrentlyLight; // Инвертируем
+    const newThemeIsLight = !isCurrentlyLight;
     
     localStorage.setItem("theme", newThemeIsLight ? "light" : "dark");
     applyTheme(newThemeIsLight);
